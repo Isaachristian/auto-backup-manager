@@ -1,4 +1,2 @@
-.env
-/data/
-node_modules/
-*.sqlite*
+auth.sqlite
+auth.sqlite-*

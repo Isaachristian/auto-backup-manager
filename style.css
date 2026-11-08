@@ -1,0 +1,21 @@
+:root { color-scheme: dark; font-family: system-ui, sans-serif; color: #e5e5e5; background: #121212; }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 4rem 1rem; }
+.card { max-width: 30rem; margin: auto; padding: 2rem; background: #1c1c1c; border: 1px solid #404040; border-radius: 1rem; }
+.brand { color: #b5b5b5; font-weight: 600; font-size: .9rem; }
+h1 { font-size: 1.7rem; }
+#title { text-align: center; }
+p { line-height: 1.6; }
+label { display: block; margin: 1rem 0 .4rem; font-weight: 500; }
+input, button { width: 100%; padding: .8rem; border: 1px solid #737373; border-radius: .4rem; font: inherit; }
+input { background: #121212; color: #e5e5e5; }
+input::placeholder { color: #a3a3a3; }
+button { margin-top: 1.3rem; background: #e5e5e5; border-color: #e5e5e5; color: #171717; font-weight: 600; cursor: pointer; }
+button:disabled { opacity: .6; cursor: wait; }
+button:hover:not(:disabled) { background: #d4d4d4; }
+a { color: #d4d4d4; }
+a:hover { color: #ffffff; }
+code { display: block; overflow-wrap: anywhere; padding: 1rem; background: #121212; border: 1px solid #404040; border-radius: .4rem; font-size: 1rem; user-select: all; }
+:focus-visible { outline: 3px solid #d4d4d4; outline-offset: 3px; }
+#message { color: #d4d4d4; }
+[hidden] { display: none !important; }

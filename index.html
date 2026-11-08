@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login · Auto Backup Manager</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/login.js" defer></script>
+</head>
+<body>
+  <main class="card">
+    <h1 id="title">Sign in</h1>
+    <p id="intro">Loading your account…</p>
+    <form id="credentials" hidden>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="username" maxlength="254" required>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" maxlength="128" required>
+      <div id="login-code" hidden>
+        <label for="code">Authenticator code</label>
+        <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="123456">
+      </div>
+      <button id="submit" type="submit">Continue</button>
+    </form>
+    <section id="setup" hidden>
+      <p><a id="authenticator">Open in your authenticator app</a></p>
+      <p>If the link does not open, add an account manually using this setup key:</p>
+      <code id="secret"></code>
+      <p>Choose time-based codes (TOTP), six digits, refreshing every 30 seconds. Keep this key private.</p>
+      <form id="verify">
+        <label for="verify-code">Enter the six-digit code from your authenticator</label>
+        <input id="verify-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+        <button type="submit">Finish account setup</button>
+      </form>
+    </section>
+    <p id="message" role="status" aria-live="polite"></p>
+  </main>
+</body>
+</html>

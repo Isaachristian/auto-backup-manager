@@ -1,4 +1,10 @@
-.git
-.env
-data
-*.sqlite*
+*
+!Dockerfile
+!package.json
+!server.js
+!index.html
+!auth.js
+!main.html
+!login.js
+!main.js
+!style.css
