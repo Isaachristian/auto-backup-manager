@@ -1,0 +1,14 @@
+import net from 'node:net';
+import tls from 'node:tls';
+import { once } from 'node:events';
+import { randomUUID } from 'node:crypto';
+export async function sendMail(s,subject,message){if(!s.enabled)throw Error('Email is disabled');let socket;
+ const connect=async secure=>{socket=secure?tls.connect({host:s.host,port:+s.port,servername:s.host,minVersion:'TLSv1.2'}):net.connect({host:s.host,port:+s.port});socket.setTimeout(30000,()=>socket.destroy(Error('SMTP timeout')));await once(socket,secure?'secureConnect':'connect');};
+ let buffer='',lines=[],waiting;
+ const attach=()=>{socket.setEncoding('utf8');socket.on('data',chunk=>{buffer+=chunk;if(buffer.length>65536){socket.destroy(Error('SMTP response too large'));return;}let i;while((i=buffer.indexOf('\r\n'))>=0){const line=buffer.slice(0,i);buffer=buffer.slice(i+2);lines.push(line);if(/^\d{3} /.test(line)){const response=lines;lines=[];if(waiting){const w=waiting;waiting=null;w.resolve(response);}}}});socket.on('error',e=>{if(waiting){waiting.reject(e);waiting=null;}});socket.on('close',()=>{if(waiting){waiting.reject(Error('SMTP disconnected'));waiting=null;}});};
+ const read=()=>new Promise((resolve,reject)=>{waiting={resolve,reject};});
+ const command=async(text,expected)=>{if(socket.destroyed||!socket.writable)throw Error('SMTP disconnected');const result=read();if(text!==null)socket.write(text+'\r\n');const r=await result;if(!expected.includes(+r.at(-1).slice(0,3)))throw Error(`SMTP rejected request (${r.at(-1).slice(0,3)})`);return r;};
+ try{await connect(s.mode==='tls');attach();await command(null,[220]);await command('EHLO backup.local',[250]);if(s.mode==='starttls'){await command('STARTTLS',[220]);socket.removeAllListeners('data');socket.removeAllListeners('error');socket.removeAllListeners('close');socket=tls.connect({socket,servername:s.host,minVersion:'TLSv1.2'});socket.setTimeout(30000,()=>socket.destroy(Error('SMTP timeout')));await once(socket,'secureConnect');buffer='';attach();await command('EHLO backup.local',[250]);}
+ if(s.user){await command('AUTH PLAIN '+Buffer.from(`\0${s.user}\0${s.password}`).toString('base64'),[235]);}
+ await command(`MAIL FROM:<${s.from}>`,[250]);const rejected=[];let accepted=0;for(const addr of s.recipients){try{await command(`RCPT TO:<${addr}>`,[250,251]);accepted++;}catch{rejected.push(addr);}}if(!accepted)throw Error('SMTP rejected all recipients');await command('DATA',[354]);const body=[`From: ${s.from}`,`To: ${s.recipients.join(', ')}`,`Subject: ${subject.replace(/[\r\n]/g,' ')}`,`Date: ${new Date().toUTCString()}`,`Message-ID: <${randomUUID()}@backup.local>`,'MIME-Version: 1.0','Content-Type: text/plain; charset=utf-8','Content-Transfer-Encoding: base64','',Buffer.from(message).toString('base64').match(/.{1,76}/g).join('\r\n')].join('\r\n');await command(body+'\r\n.',[250]);await command('QUIT',[221]);if(rejected.length)throw Error(`${rejected.length} recipient(s) rejected`);
+ }finally{socket?.destroy();}}

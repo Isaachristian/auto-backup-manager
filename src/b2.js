@@ -1,0 +1,14 @@
+import { createHash } from 'node:crypto';
+export class B2 {
+ constructor(settings){this.s=settings;}
+ async request(url,options={}){const r=await fetch(url,{...options,signal:AbortSignal.timeout(120000)});if(!r.ok)throw Error(`B2 request failed (${r.status})`);return r;}
+ async authorize(){const r=await this.request('https://api.backblazeb2.com/b2api/v3/b2_authorize_account',{headers:{Authorization:`Basic ${Buffer.from(`${this.s.keyId}:${this.s.key}`).toString('base64')}`}});const a=await r.json();this.auth=a;this.api=a.apiInfo.storageApi;return a;}
+ async call(method,data){if(!this.auth)await this.authorize();return (await this.request(`${this.api.apiUrl}/b2api/v3/${method}`,{method:'POST',headers:{Authorization:this.auth.authorizationToken,'Content-Type':'application/json'},body:JSON.stringify(data)})).json();}
+ async list(cursor){return this.call('b2_list_file_names',{bucketId:this.s.bucketId,prefix:this.s.prefix,maxFileCount:100,...(cursor?{startFileName:cursor}:{})});}
+ async info(id){return this.call('b2_get_file_info',{fileId:id});}
+ async download(id){if(!this.auth)await this.authorize();return fetch(`${this.api.downloadUrl}/b2api/v3/b2_download_file_by_id?fileId=${encodeURIComponent(id)}`,{headers:{Authorization:this.auth.authorizationToken},signal:AbortSignal.timeout(86400000)}).then(r=>{if(!r.ok)throw Error(`B2 download failed (${r.status})`);return r;});}
+ async cancel(id){return this.call('b2_cancel_large_file',{fileId:id});}
+ async upload(stream,name,onStart){const f=await this.call('b2_start_large_file',{bucketId:this.s.bucketId,fileName:name,contentType:'application/gzip',fileInfo:{}});onStart(f.fileId);const checks=[];let size=0;const partSize=16*1024*1024;let part=Buffer.allocUnsafe(partSize),used=0;
+ const send=async bytes=>{const sha=createHash('sha1').update(bytes).digest('hex');let last;for(let attempt=0;attempt<3;attempt++){try{const u=await this.call('b2_get_upload_part_url',{fileId:f.fileId});await this.request(u.uploadUrl,{method:'POST',headers:{Authorization:u.authorizationToken,'X-Bz-Part-Number':String(checks.length+1),'Content-Length':String(bytes.length),'X-Bz-Content-Sha1':sha},body:bytes});checks.push(sha);size+=bytes.length;return;}catch(e){last=e;}}throw last;};
+ try{for await(const chunk of stream){let offset=0;while(offset<chunk.length){const count=Math.min(partSize-used,chunk.length-offset);chunk.copy(part,used,offset,offset+count);used+=count;offset+=count;if(used===partSize){await send(part);used=0;}}}if(used)await send(part.subarray(0,used));if(!checks.length)throw Error('Empty backup');if(checks.length>10000)throw Error('Backup exceeds multipart limit');await this.call('b2_finish_large_file',{fileId:f.fileId,partSha1Array:checks});return {id:f.fileId,size};}catch(e){try{await this.cancel(f.fileId);onStart(null);}catch{}throw e;}}
+}
