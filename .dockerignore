@@ -8,3 +8,13 @@
 !login.js
 !main.js
 !style.css
+!database.js
+!settings.js
+!settings.html
+!settings-page.js
+!cron.js
+!smtp.js
+!connections.js
+!backup.js
+!dump.js
+!storage.js

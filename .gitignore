@@ -1,2 +1,3 @@
 auth.sqlite
 auth.sqlite-*
+.env

@@ -1,13 +1,8 @@
-import { DatabaseSync } from 'node:sqlite';
+import { db } from './database.js';
 import { randomBytes, createHash, createHmac, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
-import { openSync, closeSync, chmodSync } from 'node:fs';
 
 const scrypt = promisify(scryptCallback);
-const filename = process.env.DB_PATH || new URL('./auth.sqlite', import.meta.url);
-closeSync(openSync(filename, 'a', 0o600));
-chmodSync(filename, 0o600);
-const db = new DatabaseSync(filename);
 db.exec(`
   PRAGMA journal_mode = WAL;
   CREATE TABLE IF NOT EXISTS account (

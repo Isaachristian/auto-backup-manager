@@ -3,18 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Auto Backup Manager</title>
+  <title>Backups · Auto Backup Manager</title>
   <link rel="stylesheet" href="/style.css">
   <script src="/main.js" defer></script>
 </head>
-<body>
-  <main class="card">
-    <p class="brand">Auto Backup Manager</p>
-    <h1>You're signed in</h1>
-    <p id="email"></p>
-    <p>Your backup dashboard will appear here.</p>
-    <button id="logout" type="button">Log out</button>
-    <p id="message" role="status"></p>
+<body class="app-layout">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <aside class="sidebar">
+    <a class="app-name" href="/app">Auto Backup Manager</a>
+    <p class="nav-caption">PostgreSQL backups</p>
+    <nav aria-label="Main navigation">
+      <a href="/app" aria-current="page">Backups</a>
+      <a href="/settings">Settings</a>
+    </nav>
+    <div class="sidebar-account">
+      <p id="email"></p>
+      <button class="secondary" id="logout" type="button">Sign out</button>
+    </div>
+  </aside>
+  <main id="content" class="workspace">
+    <header class="page-header">
+      <div><p class="eyebrow">Overview</p><h1>Backups</h1><p class="muted">A history of your PostgreSQL database backups.</p></div>
+      <div class="page-actions">
+        <a class="button-link secondary" href="/settings">Configure connections</a>
+        <button id="run-backup" type="button" disabled>Run backup now</button>
+      </div>
+    </header>
+    <p id="backup-schedule" class="notice" role="status">Loading schedule…</p>
+    <section class="panel" aria-labelledby="history-title">
+      <div class="panel-heading"><h2 id="history-title">Backup history</h2><span class="muted">Most recent 100 runs</span></div>
+      <p id="loading" class="empty-state" role="status">Loading backups…</p>
+      <div id="empty" class="empty-state" hidden>
+        <h3>No backups yet</h3>
+        <p>Start by configuring your database and object storage in Settings.</p>
+        <p class="muted">Run a backup now, or enable a schedule in Settings.</p>
+        <a href="/settings">Open settings →</a>
+      </div>
+      <div id="history" class="table-scroll" hidden>
+        <table>
+          <thead><tr><th scope="col">Started</th><th scope="col">Database</th><th scope="col">Status</th><th scope="col">Size</th><th scope="col">Duration</th><th scope="col">Object / details</th></tr></thead>
+          <tbody id="backups"></tbody>
+        </table>
+      </div>
+    </section>
+    <p id="message" role="status" aria-live="polite"></p>
   </main>
 </body>
 </html>

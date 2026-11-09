@@ -1,8 +1,10 @@
 FROM node:26-alpine
 
+RUN apk add --no-cache postgresql-client gzip ca-certificates
+
 WORKDIR /app
 
-COPY package.json server.js auth.js index.html main.html login.js main.js style.css ./
+COPY package.json server.js auth.js database.js settings.js cron.js smtp.js connections.js backup.js dump.js storage.js index.html main.html settings.html login.js main.js settings-page.js style.css ./
 
 RUN mkdir /data && chown node:node /data
 

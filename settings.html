@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings · Auto Backup Manager</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/main.js" defer></script>
+  <script src="/settings-page.js" defer></script>
+</head>
+<body class="app-layout">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <aside class="sidebar">
+    <a class="app-name" href="/app">Auto Backup Manager</a>
+    <p class="nav-caption">PostgreSQL backups</p>
+    <nav aria-label="Main navigation">
+      <a href="/app">Backups</a>
+      <a href="/settings" aria-current="page">Settings</a>
+    </nav>
+    <div class="sidebar-account"><p id="email"></p><button class="secondary" id="logout" type="button">Sign out</button></div>
+  </aside>
+  <main id="content" class="workspace">
+    <header class="page-header"><div><p class="eyebrow">Configuration</p><h1>Settings</h1><p class="muted">Manage the connections used for backups and notifications.</p></div></header>
+    <p class="notice">Check connections using the current form values, then save them for scheduled backups. Test emails are sent to the recipient entered below.</p>
+    <p id="message" role="status" aria-live="polite">Loading settings…</p>
+    <div id="settings-forms" hidden>
+      <form class="panel settings-form" data-section="schedule">
+        <div class="section-heading"><h2>Backup schedule</h2><p class="muted">Run a database backup and upload it to object storage on a cron schedule.</p></div>
+        <div class="form-grid">
+          <div><label for="schedule-cron">Cron expression</label><input id="schedule-cron" name="cron" placeholder="0 3 * * *" maxlength="100" required aria-describedby="cron-help"><small id="cron-help">Minute · hour · day of month · month · day of week. For 3 AM daily: 0 3 * * *</small></div>
+          <div><label for="schedule-zone">Timezone</label><input id="schedule-zone" name="timeZone" list="timezones" required maxlength="100" aria-describedby="zone-help"><datalist id="timezones"><option value="America/Chicago"><option value="America/New_York"><option value="America/Denver"><option value="America/Los_Angeles"><option value="UTC"></datalist><small id="zone-help">America/Chicago is US Central time and follows daylight saving time.</small></div>
+          <label class="checkbox full-width"><input type="checkbox" name="enabled">Enable scheduled backups</label>
+        </div>
+        <p id="schedule-status" class="muted" role="status"></p>
+        <small>Save your database and storage details before enabling. Keep one app instance running; missed runs while it is stopped are not replayed.</small>
+        <footer class="form-footer"><p class="form-status" role="status" aria-live="polite"></p><button type="submit">Save schedule</button></footer>
+      </form>
+      <form class="panel settings-form" data-section="database">
+        <div class="section-heading"><h2>PostgreSQL</h2><p class="muted">The database you want to back up.</p></div>
+        <div class="form-grid">
+          <div><label for="db-host">Host</label><input id="db-host" name="host" placeholder="postgres.example.com" required maxlength="1024"></div>
+          <div><label for="db-port">Port</label><input id="db-port" name="port" type="number" min="1" max="65535" required></div>
+          <div><label for="db-name">Database name</label><input id="db-name" name="database" required maxlength="1024"></div>
+          <div><label for="db-user">Username</label><input id="db-user" name="username" autocomplete="off" required maxlength="1024"></div>
+          <div><label for="db-password">Password</label><input id="db-password" name="password" type="password" autocomplete="new-password" maxlength="1024" aria-describedby="db-secret-hint"><small id="db-secret-hint" data-secret-hint="password"></small><label class="checkbox"><input type="checkbox" name="clear_password">Remove saved password</label></div>
+          <div><label for="db-ssl">SSL mode</label><select id="db-ssl" name="sslmode"><option value="verify-full">Verify certificate and hostname</option><option value="require">Require encryption</option><option value="disable">Disable SSL</option></select></div>
+        </div>
+        <footer class="form-footer"><p class="form-status" role="status" aria-live="polite"></p><div class="form-actions"><button class="secondary" type="button" data-check="database">Check connection</button><button type="submit">Save database settings</button></div></footer>
+      </form>
+      <form class="panel settings-form" data-section="storage">
+        <div class="section-heading"><h2>Object storage</h2><p class="muted">An S3-compatible destination for backup files.</p></div>
+        <div class="form-grid">
+          <div class="full-width"><label for="storage-endpoint">Endpoint URL</label><input id="storage-endpoint" name="endpoint" type="url" placeholder="https://s3.example.com" required maxlength="1024"></div>
+          <div><label for="storage-region">Region</label><input id="storage-region" name="region" placeholder="us-east-1" required maxlength="1024"></div>
+          <div><label for="storage-bucket">Bucket</label><input id="storage-bucket" name="bucket" required maxlength="1024"></div>
+          <div class="full-width"><label for="storage-prefix">Object key prefix</label><input id="storage-prefix" name="prefix" placeholder="backups/" maxlength="1024"></div>
+          <div><label for="storage-key">Access key ID</label><input id="storage-key" name="accessKeyId" type="password" autocomplete="new-password" maxlength="1024" aria-describedby="storage-key-hint"><small id="storage-key-hint" data-secret-hint="accessKeyId"></small><label class="checkbox"><input type="checkbox" name="clear_accessKeyId">Remove saved access key</label></div>
+          <div><label for="storage-secret">Secret access key</label><input id="storage-secret" name="secretAccessKey" type="password" autocomplete="new-password" maxlength="1024" aria-describedby="storage-secret-hint"><small id="storage-secret-hint" data-secret-hint="secretAccessKey"></small><label class="checkbox"><input type="checkbox" name="clear_secretAccessKey">Remove saved secret key</label></div>
+          <label class="checkbox full-width"><input type="checkbox" name="pathStyle">Use path-style bucket addressing</label>
+        </div>
+        <footer class="form-footer"><p class="form-status" role="status" aria-live="polite"></p><div class="form-actions"><button class="secondary" type="button" data-check="storage">Check connection</button><button type="submit">Save storage settings</button></div></footer>
+      </form>
+      <form class="panel settings-form" data-section="smtp">
+        <div class="section-heading"><h2>Email notifications</h2><p class="muted">SMTP credentials and the recipient for backup notifications.</p></div>
+        <div class="form-grid">
+          <div><label for="smtp-host">SMTP host</label><input id="smtp-host" name="host" required maxlength="1024"></div>
+          <div><label for="smtp-port">Port</label><input id="smtp-port" name="port" type="number" min="1" max="65535" required></div>
+          <div><label for="smtp-user">Username</label><input id="smtp-user" name="username" autocomplete="off" maxlength="1024"></div>
+          <div><label for="smtp-password">Password</label><input id="smtp-password" name="password" type="password" autocomplete="new-password" maxlength="1024" aria-describedby="smtp-secret-hint"><small id="smtp-secret-hint" data-secret-hint="password"></small><label class="checkbox"><input type="checkbox" name="clear_password">Remove saved password</label></div>
+          <div><label for="smtp-from">From email</label><input id="smtp-from" name="from" type="email" required maxlength="254"></div>
+          <div><label for="smtp-to">Notification recipient</label><input id="smtp-to" name="to" type="email" required maxlength="254"></div>
+          <div><label for="smtp-security">Transport security</label><select id="smtp-security" name="security"><option value="starttls">STARTTLS (usually port 587)</option><option value="tls">TLS (usually port 465)</option></select></div>
+        </div>
+        <label class="checkbox"><input type="checkbox" name="notifyBackups">Email the result of each backup</label>
+        <footer class="form-footer"><p class="form-status" role="status" aria-live="polite"></p><div class="form-actions"><button class="secondary" type="button" data-check="smtp">Check connection</button><button class="secondary" type="button" data-test-email>Send test email</button><button type="submit">Save email settings</button></div></footer>
+      </form>
+    </div>
+  </main>
+</body>
+</html>
